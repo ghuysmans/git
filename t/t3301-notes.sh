@@ -1382,4 +1382,24 @@ test_expect_success 'empty notes are displayed by git log' '
 	test_cmp expect actual
 '
 
+test_expect_success 'add --explanation' '
+	test_commit A &&
+	git notes add -m hi --explanation exp1 &&
+	git log -n 1 refs/notes/commits |grep exp1
+'
+
+test_expect_success 'append --explanation' '
+	test_commit B &&
+	git notes add -m hi --explanation exp2 &&
+	git notes append -m there --explanation exp3 &&
+	git log -n 1 refs/notes/commits |grep exp3
+'
+
+test_expect_success 'edit --explanation' '
+	test_commit C &&
+	#FIXME
+	EDITOR="sed -i \"\\\$ax\"" git notes edit --explanation exp4 &&
+	git log -n 1 refs/notes/commits |grep exp4
+'
+
 test_done

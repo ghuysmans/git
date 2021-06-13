@@ -96,6 +96,8 @@ static const char * const git_notes_get_ref_usage[] = {
 static const char note_template[] =
 	N_("Write/edit the notes for the following object:");
 
+static char *force_message;
+
 struct note_data {
 	int given;
 	int use_editor;
@@ -421,6 +423,8 @@ static int add(int argc, const char **argv, const char *prefix)
 		OPT_BOOL(0, "allow-empty", &allow_empty,
 			N_("allow storing empty note")),
 		OPT__FORCE(&force, N_("replace existing notes"), PARSE_OPT_NOCOMPLETE),
+		OPT_STRING(0, "explanation", &force_message, N_("message"),
+			N_("override note commit message")),
 		OPT_END()
 	};
 
@@ -470,13 +474,13 @@ static int add(int argc, const char **argv, const char *prefix)
 		if (add_note(t, &object, &new_note, combine_notes_overwrite))
 			BUG("combine_notes_overwrite failed");
 		commit_notes(the_repository, t,
-			     "Notes added by 'git notes add'");
+			     force_message ? force_message : "Notes added by 'git notes add'");
 	} else {
 		fprintf(stderr, _("Removing note for object %s\n"),
 			oid_to_hex(&object));
 		remove_note(t, object.hash);
 		commit_notes(the_repository, t,
-			     "Notes removed by 'git notes add'");
+			     force_message ? force_message : "Notes removed by 'git notes add'");
 	}
 
 	free_note_data(&d);
@@ -586,6 +590,8 @@ static int append_edit(int argc, const char **argv, const char *prefix)
 			parse_reuse_arg),
 		OPT_BOOL(0, "allow-empty", &allow_empty,
 			N_("allow storing empty note")),
+		OPT_STRING(0, "explanation", &force_message, N_("message"),
+			N_("override note commit message")),
 		OPT_END()
 	};
 	int edit = !strcmp(argv[0], "edit");
@@ -639,7 +645,7 @@ static int append_edit(int argc, const char **argv, const char *prefix)
 		remove_note(t, object.hash);
 		logmsg = xstrfmt("Notes removed by 'git notes %s'", argv[0]);
 	}
-	commit_notes(the_repository, t, logmsg);
+	commit_notes(the_repository, t, force_message ? force_message : logmsg);
 
 	free(logmsg);
 	free_note_data(&d);
